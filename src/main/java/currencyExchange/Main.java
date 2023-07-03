@@ -6,10 +6,8 @@ import currencyExchange.database.DatabaseOperationTransactions;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Map;
 
 public class Main {
-
     public static void main(String[] args) {
 
         DatabaseConnection databaseConnection = new DatabaseConnection();
@@ -22,8 +20,8 @@ public class Main {
         databaseOperationTransactions.addTransaction(1, Date.valueOf(LocalDate.now()), 120.0,
                 "USD", "sell", 4.09, databaseConnection.getStatement());
 
-        Map<String, Object> customerMap = databaseOperationCustomers.getCustomerById(1, databaseConnection.getStatement());
-        Map<String, Object> transactionMap = databaseOperationTransactions.getTransactionById(1, databaseConnection.getStatement());
+        Customer customer = databaseOperationCustomers.getCustomerById(1, databaseConnection.getStatement());
+        Transaction transaction = databaseOperationTransactions.getTransactionById(1, databaseConnection.getStatement());
 
         databaseConnection.disconnect();
     }

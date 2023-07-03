@@ -1,13 +1,15 @@
 package currencyExchange.database;
 
+import currencyExchange.Transaction;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DatabaseOperationTransactions {
+    private static final Logger transactionLog = null;
     private String tableName = "Transactions";
 
     public void addTransaction(int userId, Date transactionDate, double amount, String currency, String transactionType, double exchangeRate, Statement statement) {
@@ -17,38 +19,26 @@ public class DatabaseOperationTransactions {
                     transactionType + "', " + exchangeRate + ")";
             statement.execute(sqlQuery);
         } catch (SQLException e) {
-            System.out.println("Błąd podczas dodawania nowej transakcji: " + e.getMessage());
+            transactionLog.error("Błąd podczas dodawania nowej transakcji", new Exception(e.getMessage()));
         }
     }
 
-    public Map<String, Object> getTransactionById(int transactionId, Statement statement) {
-
-        Map<String, Object> transactionMap = new HashMap<>();
+    public Transaction getTransactionById(int transactionId, Statement statement) {
         try {
             String sqlQuery = "SELECT * FROM " + tableName + " where Id = " + transactionId;
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             statement.execute(sqlQuery);
 
-            createTransactionMap(transactionMap, resultSet);
+            Transaction transaction = new Transaction(resultSet.getInt("id"), resultSet.getInt("userId"),
+                    resultSet.getDate("transactionDate"), resultSet.getDouble("amount"),
+                    resultSet.getString("currency"), resultSet.getString("transactionType"),
+                    resultSet.getInt("exchangeRate"));
             resultSet.close();
-            return transactionMap;
+            return transaction;
 
         } catch (SQLException e) {
-            System.out.println("Błąd podczas pobierania danych transakcji: " + e.getMessage());
+            transactionLog.error("Błąd podczas pobierania danych transakcji", new Exception(e.getMessage()));
             return null;
-        }
-    }
-    public void createTransactionMap(Map<String, Object> transactionMap, ResultSet resultSet) {
-        try {
-            transactionMap.put("ID", resultSet.getInt("id"));
-            transactionMap.put("USER_ID", resultSet.getInt("userId"));
-            transactionMap.put("TRANSACTION_DATE", resultSet.getDate("transactionDate"));
-            transactionMap.put("AMOUNT", resultSet.getDouble("amount"));
-            transactionMap.put("CURRENCY", resultSet.getString("currency"));
-            transactionMap.put("TRANSACTION_TYPE", resultSet.getString("transactionType"));
-            transactionMap.put("EXCHANGE_RATE", resultSet.getInt("exchangeRate"));
-        } catch (SQLException e) {
-            System.out.println("Błąd podczas dodawania danych transakcji do mapy: " + e.getMessage());
         }
     }
 }

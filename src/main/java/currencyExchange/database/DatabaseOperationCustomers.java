@@ -1,13 +1,15 @@
 package currencyExchange.database;
 
+import currencyExchange.Customer;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.logging.log4j.Logger;
 
 public class DatabaseOperationCustomers {
+    private static final Logger customerLog = null;
     private String tableName = "Customers";
     public void addCustomer(String name, String surname, String email, String password, String address, int phoneNumber, Statement statement) {
         String passworBase64 = Base64.getEncoder().encodeToString(password.getBytes());
@@ -17,37 +19,25 @@ public class DatabaseOperationCustomers {
                     address + "', " + phoneNumber + ")";
             statement.execute(sqlQuery);
         } catch (SQLException e) {
-            System.out.println("Błąd podczas dodawania nowego klienta: " + e.getMessage());
+            customerLog.error("Błąd podczas dodawania nowego klienta", new Exception(e.getMessage()));
         }
     }
-    public Map<String, Object> getCustomerById(int customerId, Statement statement) {
-
-        Map<String, Object> customerMap = new HashMap<>();
+    public Customer getCustomerById(int customerId, Statement statement) {
         try {
             String sqlQuery = "SELECT * FROM " + tableName + " where Id = " + customerId;
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             statement.execute(sqlQuery);
 
-            createCustomerMap(customerMap, resultSet);
+            Customer customer = new Customer(resultSet.getInt("id") ,resultSet.getString("name"), resultSet.getString("surname"),
+                    resultSet.getString("email"), resultSet.getString("password"), resultSet.getString("address"),
+                    resultSet.getInt("phoneNumber"));
+
             resultSet.close();
-            return customerMap;
+            return customer;
 
         } catch (SQLException e) {
-            System.out.println("Błąd podczas pobierania danych klienta: " + e.getMessage());
+            customerLog.error("Błąd podczas pobierania danych klienta", new Exception(e.getMessage()));
             return null;
-        }
-    }
-    public void createCustomerMap(Map<String, Object> customerMap, ResultSet resultSet) {
-        try {
-            customerMap.put("ID", resultSet.getInt("id"));
-            customerMap.put("NAME", resultSet.getString("name"));
-            customerMap.put("SURNAME", resultSet.getString("surname"));
-            customerMap.put("EMAIL", resultSet.getString("email"));
-            customerMap.put("PASSWORD", resultSet.getString("password"));
-            customerMap.put("ADDRESS", resultSet.getString("address"));
-            customerMap.put("PHONE_NUMBER", resultSet.getInt("phoneNumber"));
-        } catch (SQLException e) {
-            System.out.println("Błąd podczas dodawania danych klienta do mapy: " + e.getMessage());
         }
     }
 }

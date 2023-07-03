@@ -1,15 +1,22 @@
 package currencyExchange.database;
 
+import currencyExchange.Main;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 public class DatabaseConnection {
+    private static final Logger connectionLog = null;
 
-    private String url = "jdbc:mariadb://127.0.0.1:3306/currency_exchange";
-    private String username = "root";
-    private String password = "mario";
+    private String url;
+    private String username;
+    private String password;
     private Connection connection;
     private Statement statement;
 
@@ -17,24 +24,23 @@ public class DatabaseConnection {
         return statement;
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
 
-    public DatabaseConnection() {
+
+    public DatabaseConnection(){
         try {
+            loadConnectionData();
             connect();
             this.statement = connection.createStatement();
         } catch (SQLException e) {
-            System.out.println("Błąd podczas tworzenia obiektu Statement dla klienta: " + e.getMessage());
+            connectionLog.error("Błąd podczas tworzenia statementu:", new Exception(e.getMessage()));
         }
     }
 
-    public void connect() {
+    private void connect() {
         try {
             connection = DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
-            System.out.println("Błąd podczas łączenia z bazą danych: " + e.getMessage());
+            connectionLog.error("Błąd podczas łączenia z bazą danych:", new Exception(e.getMessage()));
         }
     }
 
@@ -43,8 +49,24 @@ public class DatabaseConnection {
             try {
                 connection.close();
             } catch (SQLException e) {
-                System.out.println("Błąd podczas zamykania połączenia: " + e.getMessage());
+                connectionLog.error("Błąd podczas zamykania połączenia:", new Exception(e.getMessage()));
             }
+        }
+    }
+
+    private void loadConnectionData(){
+        try{
+            Properties properties = new Properties();
+
+            InputStream inputStream = Main.class.getClassLoader().getResourceAsStream("connection.properties");
+            properties.load(inputStream);
+
+            url = properties.getProperty("db.url");
+            username = properties.getProperty("db.username");
+            password = properties.getProperty("db.password");
+
+        } catch (IOException e) {
+            connectionLog.error("Błąd podczas pobierania danych połączenia do bazy:", new Exception(e.getMessage()));
         }
     }
 }
